@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:sharding="http://shardingsphere.apache.org/schema/shardingsphere/sharding"
+       xmlns:master-slave="http://shardingsphere.apache.org/schema/shardingsphere/masterslave"
+       xmlns:rdb="http://www.springframework.org/schema/c"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                        http://www.springframework.org/schema/beans/spring-beans.xsd
+                        http://www.springframework.org/schema/context
+                        http://www.springframework.org/schema/context/spring-context.xsd
+                        http://www.springframework.org/schema/tx
+                        http://www.springframework.org/schema/tx/spring-tx.xsd
+                        http://shardingsphere.apache.org/schema/shardingsphere/sharding
+                        http://shardingsphere.apache.org/schema/shardingsphere/sharding/sharding.xsd
+                        http://shardingsphere.apache.org/schema/shardingsphere/masterslave
+                        http://shardingsphere.apache.org/schema/shardingsphere/masterslave/master-slave.xsd">
+
+
+    <!-- inline表达式报错,就是下面user_${id.longValue() % 4}} -->
+    <context:property-placeholder  ignore-unresolvable="true"/>
+
+    <!-- 主数据 -->
+    <bean id="mainDataSource" class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close" primary="true">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver" />
+        <property name="url" value="${jdbc.jdbcUrl}?serverTimezone=UTC&amp;characterEncoding=utf-8" />
+        <property name="username" value="testu1" />
+        <property name="password" value="testpwd" />
+    </bean>
+
+
+    <!-- algorithm-class="com.cxytiandi.shardingjdbc.UserSingleKeyTableShardingAlgorithm" -->
+    <!-- user_0,user_1,user_2,user_3 -->
+    <!-- 根据用户id来进行分表,使用inline表达式 -->
+    <rdb:strategy id="userTableStrategy" sharding-columns="id" algorithm-expression="t_stu_${id.longValue() % 2}"/>
+    <!--使用自定义表达式-->
+    <!--<rdb:strategy id="userTableStrategy" sharding-columns="id" algorithm-class="com.sharding.shardingjdbcdemo.UserSingleKeyTableShardingAlgorithm"/>-->
+    <rdb:data-source id="dataSource">
+        <rdb:sharding-rule data-sources="mainDataSource">
+            <rdb:table-rules>
+                <rdb:table-rule logic-table="user" actual-tables="user_${0..3}" table-strategy="userTableStrategy"/>
+            </rdb:table-rules>
+            <rdb:default-database-strategy sharding-columns="none" algorithm-class="com.dangdang.ddframe.rdb.sharding.api.strategy.database.NoneDatabaseShardingAlgorithm"/>
+        </rdb:sharding-rule>
+    </rdb:data-source>
+
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+
+</beans>
