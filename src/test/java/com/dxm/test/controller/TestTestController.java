@@ -1,5 +1,7 @@
 package com.dxm.test.controller;
 
+import com.dxm.test.utils.JsoupUtils;
+import net.minidev.json.JSONUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -127,7 +129,8 @@ public class TestTestController {
         ResultActions perform = mockMvc.perform(request);
         // 请求结果校验
         perform.andExpect(status().isOk());
-        perform.andExpect(jsonPath("$.code").value("200"));
+        perform.andExpect(jsonPath("$.code").value("0"));
+        System.out.println(perform.andReturn().getResponse().getContentAsString());
     }
 
 
