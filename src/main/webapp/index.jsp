@@ -12,6 +12,10 @@
 </body>
 <script>
     $(function () {
+
+
+
+
         $(".modKu").bind("click", function () {
 
             var url = 'http://localhost:8080/inventory/batchUpdateSafeInventory.json'
